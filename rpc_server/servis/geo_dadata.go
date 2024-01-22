@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"studentgit.kata.academy/Nikolai/historysearch/internal/config"
+	"github.com/kolya9390/RPCGeoProvider/rpc_server/config"
 )
 
 type DadataService interface {

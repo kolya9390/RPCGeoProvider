@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"github.com/kolya9390/RPCGeoProvider/rpc_server/infrastructure/response"
 	"go.uber.org/zap"
-	"studentgit.kata.academy/Nikolai/historysearch/internal/infrastructure/response"
 )
 
 type Responder interface {

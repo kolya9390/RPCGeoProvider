@@ -5,23 +5,23 @@ import (
 	"log"
 	"net/http"
 
-	"studentgit.kata.academy/Nikolai/historysearch/internal/infrastructure/responder"
-	"studentgit.kata.academy/Nikolai/historysearch/internal/modules/geoservis/repository"
-	"studentgit.kata.academy/Nikolai/historysearch/internal/modules/geoservis/servis"
+	"github.com/kolya9390/RPCGeoProvider/rpc_server/infrastructure/responder"
+	"github.com/kolya9390/RPCGeoProvider/rpc_server/servis"
+	"github.com/kolya9390/RPCGeoProvider/rpc_server/storage"
 )
 
-type GeoServiceController interface {
-	SearchAPI(w http.ResponseWriter, r *http.Request)
-	GeocodeAPI(w http.ResponseWriter, r *http.Request)
+type GeoProvider interface {
+	AddressSearch(input string) ([]*Address, error)
+	GeoCode(lat, lng string) ([]*Address, error)
 }
 
 type GeoController struct {
 	responder.Responder
 	dadataService  servis.DadataService
-	geoRepoProxy		repository.GeoRepository
+	geoRepoProxy		storage.GeoRepository
 }
 
-func NewGeoController(dadataService servis.DadataService,responder responder.Responder, geoRep repository.GeoRepository) *GeoController {
+func NewGeoController(dadataService servis.DadataService,responder responder.Responder, geoRep storage.GeoRepository) *GeoController {
 
 	return &GeoController{dadataService: dadataService, Responder: responder,geoRepoProxy: geoRep}
 }
