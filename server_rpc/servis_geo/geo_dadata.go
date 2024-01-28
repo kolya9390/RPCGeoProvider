@@ -1,4 +1,4 @@
-package servis
+package servisgeo
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kolya9390/RPCGeoProvider/rpc_server/config"
+	"github.com/kolya9390/RPCGeoProvider/server_rpc/config"
 )
 
 type DadataService interface {
-	SearchAddress(query string) (respDadataAdres, error)
-	GeocodeAddress(lat, lng string) (responseDadataGeo, error)
+	AddressSearch(input string) ([]Address, error)
+	GeoCode(lat, lng string) ([]Address, error)
 }
 
 
@@ -23,30 +23,14 @@ type DadataServiceImpl struct {
 	AuthorizationDADATA	config.AuthorizationDADATA
 }
 
-type respDadataAdres []struct {
-	Region string `json:"region"`
-	GeoLat string `json:"geo_lat"`
-	GeoLon string `json:"geo_lon"`
-}
-
-type responseDadataGeo struct {
-	Suggestions []struct {
-		Value string `json:"value"`
-		Data  struct {
-			GeoLat string `json:"geo_lat"`
-			GeoLon string `json:"geo_lon"`
-			Result string `json:"region_with_type"`
-		} `json:"data"`
-	} `json:"suggestions"`
-}
 
 
-
-func NewDadataService( /* Env? */ ) (DadataService,error) {
+func NewDadataService(configTokenDa config.AuthorizationDADATA) DadataService {
 
 	return &DadataServiceImpl{
 		client: http.Client{},
-		},nil
+		AuthorizationDADATA: configTokenDa,
+		}
 }
 
 
@@ -70,12 +54,12 @@ func (d *DadataServiceImpl) makeRequest(ctx context.Context, url, method, conten
 
 // Реализация методов DadataService
 // SearchAddress и GeocodeAddress
-func(d *DadataServiceImpl) SearchAddress(query string) (respDadataAdres, error){
+func(d *DadataServiceImpl) AddressSearch(input string) ([]Address, error){
 
 	ctx := context.Background()
 	// москва сухонская 11
 
-	data := strings.NewReader(fmt.Sprintf(`[ "%s" ]`, query))
+	data := strings.NewReader(fmt.Sprintf(`[ "%s" ]`, input))
 
 
 	url := "https://cleaner.dadata.ru/api/v1/clean/address"
@@ -93,19 +77,27 @@ func(d *DadataServiceImpl) SearchAddress(query string) (respDadataAdres, error){
 
 	var respData respDadataAdres
 
-	//log.Fatalf("%s",bodyText)
 	err = json.Unmarshal(bodyText, &respData)
 	if err != nil {
 		return nil, err
 	}
 
-	
+	var result []Address
 
-	return respData,nil
+	for _,adres := range respData{
+		address := Address{
+			GeoLat: adres.GeoLat,
+			GeoLon: adres.GeoLon,
+			Result: adres.Region,
+		}
+		result = append(result, address)
+	}
+
+	return result,nil
 
 }
 
-func(d *DadataServiceImpl)	GeocodeAddress(lat, lng string) (responseDadataGeo, error){
+func(d *DadataServiceImpl)	GeoCode(lat, lng string) ([]Address, error){
 
 	ctx := context.Background()
 	// москва сухонская 11
@@ -116,21 +108,33 @@ func(d *DadataServiceImpl)	GeocodeAddress(lat, lng string) (responseDadataGeo, e
 
 	resp, err := d.makeRequest(ctx, url, "POST", "application/json", data)
 	if err != nil {
-		return responseDadataGeo{}, fmt.Errorf("ошибка запроса к Dadata API: %w", err)
+		return nil, fmt.Errorf("ошибка запроса к Dadata API: %w", err)
 	}
 
 	defer resp.Body.Close()
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return responseDadataGeo{}, err
+		return nil, err
 	}
 
 	var respData responseDadataGeo
 
 	err = json.Unmarshal(bodyText, &respData)
 	if err != nil {
-		return responseDadataGeo{},err
+		return nil,err
 	}
 
-	return respData,nil
+	var adresses []Address
+
+	for _, suggestion := range respData.Suggestions {
+		address := Address{
+			GeoLat: suggestion.Data.GeoLat,
+			GeoLon: suggestion.Data.GeoLon,
+			Result: suggestion.Data.Result,
+		}
+		adresses = append(adresses, address)
+	
+	}
+
+	return adresses,nil
 }

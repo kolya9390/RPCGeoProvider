@@ -4,31 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
 )
 
-type GeoRepository interface {
-	Add(query, region, geoLat, geoLon string) error // Вставка в DB's
-	Get(query string) ([]AddressData, error) // Получаем данные из базы или из Редиса
-	CheckAvailability(query string) (bool, error) // Проверка наличая в базе and Cache
-}
-
-type GeoRepositoryDB interface {
-	InsertSearchHistory(query string) (int, error) // Вставка строки поиска в Таблицу search_history и надо б кэш
-	InsertAddress(region, geoLat, geoLon string) (int, error) // Вставка адреса, и координат в Таблицу address и кэш
-	InsertHistorySearchAddress(searchHistoryID, addressID int) error // Вставка айд в Таблицу history_search_address
-	SearchInHistory(query string) (bool, error) // Проверка наличая в базе 
-	FindAddressByQueryAndHistory(query string) ([]AddressData, error) // Селекс по двум таблицам 
-
-}
-
-type Cacher interface {
-    Set(key string, value []AddressData) error // Устанавливает запись в редис
-    Get(key string) ([]AddressData, error) // получаем данные из редиса
-	Check(query string) (bool, error)
-}
 
 type Cache struct {
 	client *redis.Client
@@ -58,6 +39,7 @@ func NewGeoRedis(client *redis.Client) Cacher {
 
 func NewGeoRepositoryProxy(repo geoRepository,cache Cacher) *GeoProxy {
 
+	
 
     return &GeoProxy{
         geoRepo: repo,
@@ -129,10 +111,12 @@ func (gp *GeoProxy) CheckAvailability(query string) (bool, error) {
 		return true,nil
 	}
 
+
 	if OK, err := gp.geoRepo.SearchInHistory(query) ; OK {
 		if err != nil {
 			return false,err
 		}
+		log.Println("DB",OK)
 
 		return true , nil
 	}
@@ -293,13 +277,13 @@ func (gr *geoRepository) FindAddressByQueryAndHistory(query string) ([]AddressDa
 
 
 
-
+// need fix
 
 func (gr *geoRepository) SearchInHistory(query string) (bool, error) {
     var exists bool
     // Используем оператор % для поиска похожих запросов в таблице search_history
-    err := gr.db.QueryRow("SELECT EXISTS (SELECT query FROM search_history WHERE query % $1)", query).Scan(&exists)
-    if err != nil {
+	err := gr.db.QueryRow("SELECT EXISTS (SELECT query FROM search_history WHERE query LIKE '%' || $1 || '%')", query).Scan(&exists)
+	if err != nil {
         return false, err
     }
     return exists, nil

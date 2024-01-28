@@ -1,4 +1,4 @@
-package controllergeo
+package router
 
 type Address struct {
 	GeoLat string `json:"lat"`
@@ -17,5 +17,4 @@ type ResponseAddress struct {
 
 type RequestAddressGeocode struct {
 	Lat string `json:"lat"`
-	Lng string `json:"lng"`
 }

@@ -1,13 +1,20 @@
 version: '3'
 services:
-  app:
-    build: .
+  client_app:
+    build: ./client_Proxy
     ports:
       - "8080:8080"
-    container_name: ${APP_NAME}
+    container_name: app_cleint
     volumes:
-      - ".env:/app/.env"
-      - "./public/swagger.json:/app/public/swagger.json"
+      - "./public/swagger.json:/client_app/public/swagger.json"
+  server_rpc:
+    build: ./server_rpc
+    ports:
+      - "1234:1234"
+    container_name: server_rpc
+    volumes:
+      - ".env:/server_app/.env"
+
   db:
     image: postgres:14.4-alpine
     container_name: postgres

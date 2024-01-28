@@ -2,7 +2,7 @@
 FROM golang:1.20-alpine as builder
 
 # Устанавливаем рабочую директорию внутри контейнера
-WORKDIR /app
+WORKDIR /server_app
 
 
 # Копируем все остальные файлы проекта в контейнер
@@ -18,10 +18,10 @@ RUN go build -o main
 FROM alpine:latest
 
 # Добавляем исполняемый файл из первой стадии в корневую директорию контейнера
-COPY --from=builder /app/main /main
+COPY --from=builder /server_app/main /main
 
-# Открываем порт 8080
-EXPOSE 8080
+# Открываем порт 1234
+EXPOSE 1234
 
 # Запускаем приложение
 CMD ["/main"]
