@@ -104,8 +104,8 @@ func (gs *GeoService) StartServer(port string) error {
 	return nil
 }
 
-func (gs *GeoService) AddressSearch(input string, reply *[]*Address) error {
-    addresses, err := gs.geoProvider.AddressSearch(input)
+func (gs *GeoService) AddressSearch(query RequestAddressSearch, reply *[]*Address) error {
+    addresses, err := gs.geoProvider.AddressSearch(query.Query)
     if err != nil {
         log.Printf("Error AddressSearch: %v", err)
         return err
@@ -124,15 +124,15 @@ func (gs *GeoService) AddressSearch(input string, reply *[]*Address) error {
 }
 
 
-func (gs *GeoService) AddressGeoCode(input string, reply []*Address) error {
-		addresses, err := gs.geoProvider.GeoCode(input,"")
+func (gs *GeoService) AddressGeoCode(geocode RequestAddressGeocode, reply *[]*Address) error {
+		addresses, err := gs.geoProvider.GeoCode(geocode.Lat,geocode.Lng)
 		if err != nil {
-			log.Printf("Error AddressSearch: %v", err)
+			log.Printf("Error AddressGeoCode: %v", err)
 			return err
 		}
 		// Просто присваиваем новое значение reply через косвенное разыменование
 		for _,adres := range addresses{
-			reply = append(reply, &Address{
+			*reply = append(*reply, &Address{
 				GeoLat: adres.GeoLat,
 				GeoLon: adres.GeoLon,
 				Result: adres.Result,

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -69,6 +70,7 @@ func(d *DadataServiceImpl) AddressSearch(input string) ([]Address, error){
 		return nil, fmt.Errorf("ошибка запроса к Dadata API: %w", err)
 	}
 
+	log.Println(input)
 	defer resp.Body.Close()
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -77,6 +79,7 @@ func(d *DadataServiceImpl) AddressSearch(input string) ([]Address, error){
 
 	var respData respDadataAdres
 
+	log.Printf("%s",bodyText)
 	err = json.Unmarshal(bodyText, &respData)
 	if err != nil {
 		return nil, err

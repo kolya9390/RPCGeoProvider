@@ -41,7 +41,7 @@ func NewApiRouter( /*RPC CLIENT*/ ) http.Handler {
 
 			client := rpcclient.NewGeoClient()
 
-			addresses := client.SearchSer(requestBody.Query)
+			addresses := client.SearchSer(rpcclient.RequestAddressSearch(requestBody))
 			var adreses_resp []Address
 			for _,adres := range addresses{
 				adreses_resp = append(adreses_resp, Address(adres))
@@ -68,6 +68,38 @@ func NewApiRouter( /*RPC CLIENT*/ ) http.Handler {
 		})
 
 		r.Post("/address/geocode", func(w http.ResponseWriter, r *http.Request) {
+			var requestBody RequestAddressGeocode
+
+			if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+				log.Println("Decoder Body")
+				return
+			}
+
+			client := rpcclient.NewGeoClient()
+
+			addresses := client.GeoCoder(rpcclient.RequestAddressGeocode(requestBody))
+			var adreses_resp []Address
+			for _,adres := range addresses{
+				adreses_resp = append(adreses_resp, Address(adres))
+			}
+			response := ResponseAddress{
+				Addresses: adreses_resp,
+			}
+
+			// Конвертируйте объект ResponseAddress в JSON
+			jsonResponse, err := json.Marshal(response)
+			if err != nil {
+				log.Println("Error marshalling JSON:", err)
+				http.Error(w, "Failed to marshal JSON response", http.StatusInternalServerError)
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+			_, err = w.Write(jsonResponse)
+			if err != nil {
+				log.Println("Error writing JSON response:", err)
+				return
+			}
 
 		})
 

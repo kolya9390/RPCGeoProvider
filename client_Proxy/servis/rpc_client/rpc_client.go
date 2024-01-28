@@ -23,7 +23,7 @@ type Address struct {
     Result string `json:"result"`
 }
 
-func (gss *GeoClient) SearchSer(query string) []Address {
+func (gss *GeoClient) SearchSer(query RequestAddressSearch) []Address {
 	
 	var result []Address                                             
 	err := gss.client.Call("GeoService.AddressSearch", query, &result)
@@ -38,10 +38,10 @@ func (gss *GeoClient) SearchSer(query string) []Address {
 	return result
 }
 
-func (gss *GeoClient) GeoCoder(query string) []Address {
+func (gss *GeoClient) GeoCoder(geocode RequestAddressGeocode) []Address {
 
 	var result []Address                                              // Инициализируйте переменную для результата
-	err := gss.client.Call("gs.AddressGeoCode", query, &result) // Измените имя метода и передайте &result
+	err := gss.client.Call("GeoService.AddressGeoCode",geocode, &result) // Измените имя метода и передайте &result
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -17,4 +17,5 @@ type ResponseAddress struct {
 
 type RequestAddressGeocode struct {
 	Lat string `json:"lat"`
+	Lng string `json:"lng"`
 }
